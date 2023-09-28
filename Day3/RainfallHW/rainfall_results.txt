@@ -1,0 +1,12 @@
+The overall average rainfall for January is: 4.3
+The overall average rainfall for February is: 4.23
+The overall average rainfall for March is: 4.8
+The overall average rainfall for April is: 3.58
+The overall average rainfall for May is: 3.59
+The overall average rainfall for June is: 4.28
+The overall average rainfall for July is: 4.36
+The overall average rainfall for August is: 4.08
+The overall average rainfall for September is: 3.8
+The overall average rainfall for October is: 2.76
+The overall average rainfall for November is: 3.73
+The overall average rainfall for December is: 4.69
