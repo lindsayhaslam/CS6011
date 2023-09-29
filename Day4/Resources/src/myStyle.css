@@ -1,0 +1,25 @@
+body {
+    background-color: #fadadd;
+    font-family:Georgia, 'Times New Roman', Times, serif;
+    color: #604B62;
+}
+h1{
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 30;
+    color: F38CAC;
+    border-style: dotted;
+    border-color: white;
+}
+p {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 20px;
+}
+img {
+    width: 400px;
+    height: 300px;
+    border-style: dotted;
+    border-color: white;
+}
+a:link {
+    color: #C77398;
+}
