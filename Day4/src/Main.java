@@ -6,105 +6,74 @@ import java.net.Socket;
 public class Main {
     public static void main(String[] args) throws IOException {
 
-        //Create object that is going to watch and that is the server socket
+        //Create a ServerSocket object named server that listens on port 8080 for incoming client connections.
         ServerSocket server = new ServerSocket(8080);
+
+        //Enter an infinite loop to continuously listen for incoming client connections.
         String filename = "";
         while (true) {
             Socket client = server.accept();
-            Scanner sc = new Scanner(client.getInputStream()); //Use a better name than sc
+            //Create a Scanner object named sc to read from the input stream of the client socket.
+            Scanner sc = new Scanner(client.getInputStream());
 
+            //If there is data available to read
             if (sc.hasNext()) {
+                //Read the request and store it in String req
                 String req = sc.nextLine();
                 //Splitting the string automatically stores the whole thing in an array and then accessing array[1].
                 filename = req.split(" ")[1];
+                //For debugging
                 System.out.println(filename);
-            }
-            //Opening the file
-            File file = new File("/Users/lindsayhaslam/IdeaProjects/Day4/Resources/src" + filename);
-            String extension = "";
 
-            int i = filename.lastIndexOf('.');
-            if (i > 0) {
-                extension = filename.substring(i + 1);
-                System.out.println(extension);
-            }
+                //Opening the file
+                //Create a File object named file that for requested file.
+                //Create a File object named failFile for custom error page.
+                File file = new File("/Users/lindsayhaslam/IdeaProjects/Day4/Resources/src" + filename);
+                File failFile = new File("/Users/lindsayhaslam/CS6011/Day4/Resources/src/failFile.html");
+                OutputStream outputStream = client.getOutputStream();
 
-            //Creating a file stream to read the contents of the file
-            FileInputStream fileStream = new FileInputStream(file);
+                try {
+                    String extension = "";
+                    //Extract the file extension from filename.
+                    int i = filename.lastIndexOf('.');
+                    if (i > 0) {
+                        extension = filename.substring(i + 1);
+                        System.out.println(extension);
+                    }
+                    //Creating a file stream to read the contents of the file
+                    FileInputStream fileStream = new FileInputStream(file);
 
-            OutputStream outputStream = client.getOutputStream();
-            PrintWriter printWriter = new PrintWriter(outputStream);
-            // Check if the requested file does not exist or is not a regular file.
-            if (!file.exists() || !file.isFile()) {
-                // If the file is not found, create a 404 Not Found response.
-                String response = "HTTP/1.1 404 Not Found\n" +
-                        // Set the response content type to HTML.
-                        "Content-type: text/html\n" +
-                        // Add a blank line to separate headers from the response body.
-                        "\n" +
-                        // HTML response body with a 404 message
-                        "<html><body><h1>404 Not Found</h1></body></html>";
-                // Convert the response string to bytes and write it to the output stream.
-                outputStream.write(response.getBytes());
-            }
-            // else if the file does exist
-            else if (file.exists()) {
-                // Set the appropriate Content-type header based on the file extension
-                if (extension.equals("html")) {
-                    outputStream.write("HTTP/1.1 200 OK\n".getBytes());
+
+                    //Determine the content type of the file being served.
+                    if (extension.equals("html")) {
+                        outputStream.write("HTTP/1.1 200 OK\n".getBytes());
+                        outputStream.write("Content-type: text/html\n".getBytes());
+                    } else if (extension.equals("css")) {
+                        outputStream.write("HTTP/1.1 200 OK\n".getBytes());
+                        outputStream.write("Content-type: text/css\n".getBytes());
+                    } else if (extension.equals("jpeg")) {
+                        outputStream.write("HTTP/1.1 200 OK\n".getBytes());
+                        outputStream.write("Content-type: image/jpeg\n".getBytes());
+                    } else if (extension.equals("mp3")) {
+                        outputStream.write("HTTP/1.1 200 OK\n".getBytes());
+                        outputStream.write("Content-type: audio/mpeg\n".getBytes());
+                    }
+                    outputStream.write("\n".getBytes());
+                    fileStream.transferTo(outputStream);
+                    outputStream.flush();
+                    outputStream.close();
+
+                } catch(FileNotFoundException e){
+                    FileInputStream failFileStream = new FileInputStream(failFile);
+                    outputStream.write("HTTP/2.0 404 OK\n".getBytes());
                     outputStream.write("Content-type: text/html\n".getBytes());
-                } else if (extension.equals("css")) {
-                    outputStream.write("HTTP/1.1 200 OK\n".getBytes());
-                    outputStream.write("Content-type: text/css\n".getBytes());
-                } else if (extension.equals("jpeg")) {
-                    outputStream.write("HTTP/1.1 200 OK\n".getBytes());
-                    outputStream.write("Content-type: image/jpeg\n".getBytes());
-                } else if (extension.equals("mp3")) {
-                    outputStream.write("HTTP/1.1 200 OK\n".getBytes());
-                    outputStream.write("Content-type: audio/mpeg\n".getBytes());
+                    outputStream.write("\n".getBytes());
+
+                    failFileStream.transferTo(outputStream);
+                    outputStream.flush();
+                    outputStream.close();
                 }
             }
-            // Add a blank line before sending the file contents
-            outputStream.write("\n".getBytes());
-            // Transfer the file's contents to the output stream
-            fileStream.transferTo(outputStream);
-
-            // Flush and close the output stream
-            outputStream.flush();
-            outputStream.close();
         }
     }
 }
-
-
-//
-//            //if the requested file is found, if not found send a message
-//            outStream.write("HTTP/1.1 200\n");
-//
-//            //Send the http header
-//            //Send the message to the client
-//            //outStream.print("http/1.1 200 Success\n");
-//            outStream.write("Content-type: text/html\n");
-//            outStream.write("\n");
-//            //fileStream.transferTo(os);
-//            //Loops over all the content
-//            Scanner fc = new Scanner(fileStream);
-//            while (fc.hasNext()) {
-//                String line = fc.nextLine();
-//                outStream.print(line);
-//            }
-//            outStream.println();
-//            outStream.flush();
-//            outStream.close();
-
-        ///NNNOOOOOTETTTEEESSSS
-        //String path = "/Users/lindsayhaslam/..."
-        //FileInputStream filestream = new FileInputStream(path);
-
-        //System.out.println(filestream.read());
-        //System.out.println(char(filestream.read()));
-
-        //Scanner scanner = new Scanner(filestream);
-        //scanner.useDelimiter("i"); //Whenever I hit "i", it separates to the next line and "i" disappears
-        //while (scanner.hasNext()){
-        //System.out.println(scanner.next()); //This goes until the n
