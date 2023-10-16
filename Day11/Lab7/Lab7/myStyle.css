@@ -1,0 +1,4 @@
+audio {
+  display: block; /* Ensures the audio element takes up the entire width */
+  margin: 0 auto; /* Margin:auto horizontally centers the element */
+}
