@@ -1,17 +1,20 @@
-public class Fractions {
+public class Fraction {
 
 public long numerator, denominator;
     //Default constructor
 
-    public Fractions() {
+    public Fraction() {
         numerator = 0;
         denominator = 1;
     }
 
     //Constructor that sets the value
-    public Fractions(long num, long den){
+    public Fraction(long num, long den){
         numerator = num;
         denominator = den;
+        if (denominator == 0){
+            throw new IllegalArgumentException("Divide by zero error.");
+        }
         if (numerator < 0 && denominator < 0){
             numerator *= -1;
             denominator *= -1;
@@ -23,7 +26,7 @@ public long numerator, denominator;
         reduce();
     }
 
-    public Fractions Plus(Fractions rhs) {
+    public Fraction Plus(Fraction rhs) {
         long resultNum, resultDen;
         if (denominator == rhs.denominator) {
             resultDen = denominator;
@@ -32,41 +35,47 @@ public long numerator, denominator;
             resultDen = denominator * rhs.denominator;
             resultNum = numerator * (rhs.denominator) + rhs.numerator * (denominator);
         }
-        return new Fractions(resultNum, resultDen);
+        return new Fraction(resultNum, resultDen);
     }
 
-    public Fractions Minus(Fractions rhs){
+    public Fraction Minus(Fraction rhs){
         long resultNum, resultDen;
         if (denominator == rhs.denominator) {
             resultDen = denominator;
-            resultNum = numerator + rhs.numerator;
+            resultNum = numerator - rhs.numerator;
         } else {
             resultDen = denominator * rhs.denominator;
             resultNum = numerator * (rhs.denominator) - rhs.numerator * (denominator);
         }
-        return new Fractions(resultNum, resultDen);
+        return new Fraction(resultNum, resultDen);
     }
-    public Fractions Times(Fractions rhs){
+    public Fraction Times(Fraction rhs){
         long resultNum, resultDen;
         resultNum = numerator * rhs.numerator;
         resultDen = denominator * rhs.denominator;
-        return new Fractions(resultNum, resultDen);
+        return new Fraction(resultNum, resultDen);
     }
 
-    public Fractions DividedBy(Fractions rhs)
+    public Fraction DividedBy(Fraction rhs)
     {
         long resultNum, resultDen;
         resultNum = numerator * rhs.denominator;
         resultDen = denominator * rhs.numerator;
-        return new Fractions(resultNum, resultDen);
+        if (resultDen == 0){
+            throw new IllegalArgumentException("Denominator of 0 error.");
+        }
+        return new Fraction(resultNum, resultDen);
     }
 
-    public Fractions Reciprocal ()
+    public Fraction Reciprocal ()
     {
         long newNum, newDen;
         newNum = denominator;
         newDen = numerator;
-        return new Fractions(newNum, newDen);
+        if (newDen == 0){
+            throw new IllegalArgumentException("Denominator of 0 error.");
+        }
+        return new Fraction(newNum, newDen);
     }
 
     public String toString () {
@@ -95,7 +104,7 @@ public long numerator, denominator;
     }
    private void reduce (){
         long _gcd = findGCD();
-      numerator = (int) (numerator/_gcd);
-      denominator = (int) (denominator/_gcd);
+      numerator = numerator/_gcd;
+      denominator = denominator/_gcd;
    }
 }
