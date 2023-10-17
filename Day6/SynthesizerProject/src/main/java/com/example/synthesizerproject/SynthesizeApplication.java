@@ -31,6 +31,8 @@ public class SynthesizeApplication extends Application {
     public static ArrayList<AudioComponentWidget> connectedWidgets = new ArrayList<>();
     public static ArrayList<SineWave> sineWaves = new ArrayList();
 
+    public VolumeAdjuster changeVolume;
+
     @Override
     public void start(Stage stage) throws IOException {
         BorderPane mainLayout = new BorderPane();
@@ -61,8 +63,14 @@ public class SynthesizeApplication extends Application {
         //Volume Button
         Button volumeBtn = new Button("Volume");
         volumeBtn.setStyle("-fx-background-color: #FFECF6; -fx-text-fill: #E0218A; -fx-border-color: white; -fx-border-width: 2px; -fx-font-family: 'Comic Sans MS'; -fx-font-weight: bold; -fx-font-size: 14;");
-        volumeBtn.setOnAction(this::createVolumeComponent);
+        volumeBtn.setOnAction(this::createVolume);
         rightpanel.getChildren().add(volumeBtn);
+
+        //Linear Ramp Button
+        Button linearRamp = new Button("Linear Ramp");
+        linearRamp.setStyle("-fx-background-color: #FFECF6; -fx-text-fill: #E0218A; -fx-border-color: white; -fx-border-width: 2px; -fx-font-family: 'Comic Sans MS'; -fx-font-weight: bold; -fx-font-size: 14;");
+        linearRamp.setOnAction(this::createComponent);
+        rightpanel.getChildren().add(linearRamp);
 
         //Center Panel
         mainCenter = new AnchorPane();
@@ -98,17 +106,20 @@ public class SynthesizeApplication extends Application {
         int frequency = 200;
         AudioComponent sineWave = new SineWave(frequency);
         sineWaves.add((SineWave) sineWave);
-        AudioComponentWidget acw = new AudioComponentWidget(sineWave, mainCenter);
-        mainCenter.getChildren().add(acw);
-        widgets.add(acw);
+        SineWaveWidget sw = new SineWaveWidget(sineWave, mainCenter);
+        mainCenter.getChildren().add(sw);
+        widgets.add(sw);
     }
 
-    private void createVolumeComponent(ActionEvent e){
-        int volume = 3;
-        VolumeAdjuster volumeAdjuster = new VolumeAdjuster(volume);
-        AudioComponentWidget acw = new AudioComponentWidget(volumeAdjuster, mainCenter);
-        mainCenter.getChildren().add(acw);
-        widgets.add(acw);
+    // Creates a volume adjustment widget
+    private void createVolume(ActionEvent e) {
+        int initialVolume = 3;
+        AudioComponent volume = new VolumeAdjuster(initialVolume);
+        VolumeAdjusterWidget volumeWidget = new VolumeAdjusterWidget(volume, mainCenter);
+        // Add the VolumeAdjusterWidget to the mainCenter AnchorPane
+        mainCenter.getChildren().add(volumeWidget);
+        // Add the widget to your list of widgets (if needed)
+        widgets.add(volumeWidget);
     }
 
     private void playAudio(ActionEvent e) {

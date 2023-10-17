@@ -12,6 +12,11 @@ public class VolumeAdjuster implements AudioComponent{
 
        volumeScale_ = volumeScale;
     }
+
+    public void getVolumeScale(float volumeScale) {
+        this.volumeScale_ = volumeScale;
+    }
+
     @Override
     //This method adjusts the volume of the input audio
     //and returns a new AudioClip object containing the adjusted audio.
