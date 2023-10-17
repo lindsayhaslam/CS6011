@@ -22,12 +22,15 @@ public class VolumeAdjusterWidget extends AudioComponentWidget {
     private final Label volumeLabel_;
     Slider volumeSlider;
     Label volumeLabel;
+    HBox baseLayout;
+    VBox rightSide;
 
-    VolumeAdjusterWidget(AudioComponent audioComponent, AnchorPane pane) {
+
+    VolumeAdjusterWidget(AudioComponent ac, AnchorPane parent) {
         // Call the constructor of the base class (AudioComponentWidgetBase)
-        super(audioComponent, pane);
+        super(ac, parent);
         //VolumeSlider
-        VBox leftSideVolume = new VBox();
+        rightSide = new VBox();
         volumeLabel = new Label("Volume");
         volumeLabel.setFont(Font.font("Comic Sans MS", FontWeight.BOLD, 14));
         leftSide.getChildren().add(volumeLabel);
@@ -35,11 +38,11 @@ public class VolumeAdjusterWidget extends AudioComponentWidget {
         volumeSlider.setStyle("-fx-color: #F18DBC");
         volumeSlider.setShowTickLabels(true);
         volumeSlider.setShowTickMarks(true);
-        leftSide.getChildren().add(volumeSlider);
+        rightSide.getChildren().add(volumeSlider);
+        super.baseLayout.getChildren().add(rightSide);
 
 
         //VBOX for RIGHT
-        rightSide = new VBox();
         rightSide.setOnMousePressed(this::getPosinf);
         rightSide.setOnMouseDragged(this::moveWidget);
         //rightSide.getChildren().add(closeBtn);
