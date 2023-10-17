@@ -124,14 +124,6 @@ public class AudioComponentWidget extends Pane {
         }
 
     }
-
-
-    //    private void handleVolumeSlider(MouseEvent mouseEvent) {
-//       AudioComponent volume = getAudioComponent();
-//        int result = (int) volumeSlider.getValue();
-//        volumeLabel.setText("Volume: " + result);
-//        ((SineWave) ac_).updateVolume(result);
-//    }
     private void closeWidget(ActionEvent e) {
         parent_.getChildren().remove(this);
         SynthesizeApplication.widgets.remove(this);
@@ -156,6 +148,3 @@ public class AudioComponentWidget extends Pane {
         return ac_;
     }
 }
-
-    // Override the handleSlider method from the base class
-    // This method is called when the volume slider is dragged

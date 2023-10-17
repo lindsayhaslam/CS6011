@@ -5,17 +5,18 @@ public class VolumeAdjuster implements AudioComponent{
     private AudioComponent input_;
 
     //This variable represents the scaling factor by which the volume of the input audio will be adjusted.
-    public double volumeScale_;
+    public double volumeScale;
+
     //This is a constructor for the VolumeAdjuster class.
     // It takes a volumeScale parameter, which is used to initialize the volumeScale_ instance variable.
     public VolumeAdjuster(double volumeScale){
 
-       volumeScale_ = volumeScale;
+       this.volumeScale = volumeScale;
+    }
+    public void adjustVolume(double volumeScale) {
+        this.volumeScale = volumeScale;
     }
 
-    public void getVolumeScale(float volumeScale) {
-        this.volumeScale_ = volumeScale;
-    }
 
     @Override
     //This method adjusts the volume of the input audio
@@ -25,7 +26,7 @@ public class VolumeAdjuster implements AudioComponent{
        AudioClip result = new AudioClip();
         //Loop iterates through each sample in the original audio clip and applies the volume scaling factor:
        for (int i = 0; i < AudioClip.TOTAL_SAMPLES; i++){
-           int adjustedSample = (int)(volumeScale_* original.getSample(i));
+           int adjustedSample = (int)(volumeScale * original.getSample(i));
            int max = Short.MAX_VALUE;
            int min = Short.MIN_VALUE;
 
