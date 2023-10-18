@@ -67,10 +67,10 @@ public class SynthesizeApplication extends Application {
         rightpanel.getChildren().add(volumeBtn);
 
         //Linear Ramp Button
-        Button linearRamp = new Button("Linear Ramp");
-        linearRamp.setStyle("-fx-background-color: #FFECF6; -fx-text-fill: #E0218A; -fx-border-color: white; -fx-border-width: 2px; -fx-font-family: 'Comic Sans MS'; -fx-font-weight: bold; -fx-font-size: 14;");
-        linearRamp.setOnAction(this::createComponent);
-        rightpanel.getChildren().add(linearRamp);
+        Button mixerBtn = new Button("Mixer");
+        mixerBtn.setStyle("-fx-background-color: #FFECF6; -fx-text-fill: #E0218A; -fx-border-color: white; -fx-border-width: 2px; -fx-font-family: 'Comic Sans MS'; -fx-font-weight: bold; -fx-font-size: 14;");
+        mixerBtn.setOnAction(this::createComponent);
+        rightpanel.getChildren().add(mixerBtn);
 
         //Center Panel
         mainCenter = new AnchorPane();
@@ -121,6 +121,14 @@ public class SynthesizeApplication extends Application {
         // Add the widget to your list of widgets (if needed)
         widgets.add(volumeWidget);
     }
+
+//    private void createMixer(ActionEvent e) {
+//        MixerWidget mixer = new MixerWidget();
+//        // Add the VolumeAdjusterWidget to the mainCenter AnchorPane
+//        mainCenter.getChildren().add(mixer);
+//        // Add the widget to your list of widgets (if needed)
+//        widgets.add(mixer);
+//    }
 
     private void playAudio(ActionEvent e) {
         //ATTEMPT OF NABIL'S CODE
