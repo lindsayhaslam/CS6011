@@ -1,11 +1,75 @@
 //import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import java.util.ArrayList;
+import java.util.Collections;
 
 class FractionsTest {
     @Test
     public void runAllTests(){
+        tryCatch();
+        testReduce();
+        testPlus();
+        testMinus();
+        testTimes();
+        testDividedBy();
+        testReciprocal();
+        testToDouble();
+        testCompareTo();
     }
+
+    @Test
+    void testCompareTo(){
+        ArrayList<Fraction> a1=new ArrayList<Fraction>();
+
+        a1.add(new Fraction(2, 4));
+        a1.add(new Fraction (1, 4));
+        a1.add(new Fraction (3, 4));
+        a1.add(new Fraction (0, 4));
+
+        Collections.sort(a1);
+
+        for (int i=0; i<a1.size(); i++){
+            System.out.println(a1.get(i));
+        }
+    }
+
+    @Test
+    void tryCatch(){
+        Fraction f1= new Fraction (0,4);
+        Fraction f2= new Fraction(1,5);
+        try {
+            Fraction f3 = new Fraction(4, 0);
+        } catch (ArithmeticException e){
+            System.out.println(e.getMessage());
+        }
+        try {
+            f1.Reciprocal();
+        } catch (ArithmeticException e){
+            System.out.println(e.getMessage());
+
+        }
+        try {
+            f2.DividedBy(f1);
+        } catch (ArithmeticException e){
+            System.out.println(e.getMessage());
+        }
+
+    }
+
+    @Test
+    void testReduce() {
+        Fraction f1=new Fraction(12,30);
+        Fraction f2=new Fraction(9,12);
+        Fraction f3=new Fraction(-6,-18);
+        Fraction f4=new Fraction(24, -108);
+
+        Assertions.assertEquals(f1.toString(), "2/5");
+        Assertions.assertEquals(f2.toString(), "3/4");
+        Assertions.assertEquals(f3.toString(), "1/3");
+        Assertions.assertEquals(f4.toString(), "-2/9");
+    }
+
 
     @Test
     public void testThrowException(){

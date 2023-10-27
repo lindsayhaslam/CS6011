@@ -1,4 +1,4 @@
-public class Fraction {
+public class Fraction implements Comparable<Fraction> {
 
 public long numerator, denominator;
     //Default constructor
@@ -67,7 +67,7 @@ public long numerator, denominator;
         return new Fraction(resultNum, resultDen);
     }
 
-    public Fraction Reciprocal ()
+    public Fraction Reciprocal()
     {
         long newNum, newDen;
         newNum = denominator;
@@ -78,20 +78,19 @@ public long numerator, denominator;
         return new Fraction(newNum, newDen);
     }
 
-    public String toString () {
+    public String toString() {
         String stringNum = Long.toString(numerator);
         String stringDen = Long.toString(denominator);
         return stringNum + "/" + stringDen;
     }
 
-    public Double toDouble (){
-        double resultDouble;
+    public Double toDouble(){
         double num = numerator;
         double den = denominator;
-        return resultDouble= num/den;
+        return num/den;
     }
 
-    private Long findGCD ()
+    private Long findGCD()
     {
         long gcd = numerator;
         long remainder = denominator;
@@ -102,9 +101,20 @@ public long numerator, denominator;
         }
         return gcd;
     }
-   private void reduce (){
+   private void reduce(){
         long _gcd = findGCD();
       numerator = numerator/_gcd;
       denominator = denominator/_gcd;
    }
+
+    @Override
+    public int compareTo(Fraction rhs) {
+        if ((this.Minus(rhs)).toDouble()>= 0){
+            return 1;
+        }
+        else if ((this.Minus(rhs)).toDouble() <= 0){
+            return -1;
+        }
+        return 0;
+    }
 }
