@@ -46,7 +46,5 @@ public class SineWave implements AudioComponent {
     }
 
     //Volume
-    public void updateVolume(int volume){
-        volume_=volume;
-    }
+
 }

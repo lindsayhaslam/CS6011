@@ -14,7 +14,7 @@ public class Mixer implements AudioComponent {
         ArrayList<AudioClip> audioClips = new ArrayList<>();
         //loop through arrays
         for (AudioComponent audioComponents : audioArray) {
-            AudioClip clip = audioComponents.getClip();
+           // AudioClip clip = audioComponents.getClip();
             VolumeAdjuster lowerVolume = new VolumeAdjuster(.25);
             lowerVolume.connectInput(audioComponents);
             audioClips.add(lowerVolume.getClip());
@@ -39,13 +39,12 @@ public class Mixer implements AudioComponent {
 
         @Override
         public boolean hasInput () {
-
             return !audioArray.isEmpty();
         }
 
         @Override
         public void connectInput (AudioComponent input){
             audioArray.add(input);
-
         }
+
     }

@@ -48,12 +48,17 @@ public class VolumeAdjuster implements AudioComponent{
     @Override
     //Indicates that "VolumeAdjuster" does not need an input
     public boolean hasInput() {
-        return false;
+
+        return input_ != null;
     }
 
     @Override
     public void connectInput(AudioComponent input) {
         input_ = input;
 
+    }
+
+    public void updateVolume(int volume){
+        volumeScale = volume;
     }
 }

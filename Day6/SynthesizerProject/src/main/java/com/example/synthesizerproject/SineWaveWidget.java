@@ -22,8 +22,8 @@ public class SineWaveWidget extends AudioComponentWidget {
 
     static Slider freqSlider;
 
-    HBox baseLayout;
-    VBox rightSide;
+    //HBox baseLayout;
+    //VBox rightSide;
     VBox leftSide;
 
     Label frequencyLabel;

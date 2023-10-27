@@ -17,11 +17,15 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
+import java.util.ArrayList;
+
 public class AudioComponentWidget extends Pane {
     AudioComponent ac_;
     AnchorPane parent_;
 
     Slider volumeSlider;
+
+    Circle output;
 
 
     Line line_;
@@ -50,7 +54,7 @@ public class AudioComponentWidget extends Pane {
         volumeLabel = new Label("Volume");
         volumeLabel.setFont(Font.font("Comic Sans MS", FontWeight.BOLD, 14));
         leftSide.getChildren().add(volumeLabel);
-        volumeSlider = new Slider(0, 6, 3);
+        volumeSlider = new Slider(0, 10, 5);
 
         volumeSlider.setStyle("-fx-color: #F18DBC");
         volumeSlider.setShowTickLabels(true);
@@ -65,7 +69,7 @@ public class AudioComponentWidget extends Pane {
         Button closeBtn = new Button("x");
         closeBtn.setStyle("-fx-background-color: #F18DBC; -fx-text-fill: white; -fx-border-color: white; -fx-border-width: 2px; -fx-padding: 8px; -fx-font-size: 12px;");
         closeBtn.setOnAction(this::closeWidget);
-        Circle output = new Circle(10);
+        output = new Circle(10);
         output.setStyle("-fx-fill: #E0218A");
         //rightSide.getChildren().add(closeBtn);
 
@@ -116,13 +120,23 @@ public class AudioComponentWidget extends Pane {
         Circle speaker = SynthesizeApplication.speaker; //get the speaker from the main application
         Bounds speakerBounds = speaker.localToScene(speaker.getBoundsInLocal());
         double distance = Math.sqrt(Math.pow(speakerBounds.getCenterX() - e.getSceneX(), 2.0) + Math.pow(speakerBounds.getCenterY() - e.getSceneY(), 2.0));
-        if (distance < 10) {
-            SynthesizeApplication.connectedWidgets.add(this);
-        } else {
-            parent_.getChildren().remove(line_);
-            line_ = null;
-        }
 
+
+        AudioComponentWidget widget = SynthesizeApplication.findClosestConnectable(e);
+
+        if (widget != null){
+//            SynthesizeApplication.connectedWidgets_.add(this);
+            widget.ac_.connectInput(this.ac_);
+
+        }
+        else if (distance<15){
+            SynthesizeApplication.connectedWidgets.add(this);
+//            SynthesizeApplication.connectToSpeaker(this.ac_);
+        }
+        else{
+            parent_.getChildren().remove(line_);
+            line_=null;
+        }
     }
     private void closeWidget(ActionEvent e) {
         parent_.getChildren().remove(this);
@@ -146,5 +160,9 @@ public class AudioComponentWidget extends Pane {
 
     public AudioComponent getAudioComponent() {
         return ac_;
+    }
+
+    public Bounds getCircleBounds(){
+        return output.localToScene(output.getBoundsInLocal());
     }
 }

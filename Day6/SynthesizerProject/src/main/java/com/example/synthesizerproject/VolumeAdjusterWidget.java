@@ -56,7 +56,7 @@ public class VolumeAdjusterWidget extends AudioComponentWidget {
         private void handleVolumeSlider(MouseEvent mouseEvent) {
         int result = (int) volumeSlider.getValue();
         volumeLabel.setText("Volume: " + result);
-        ((VolumeAdjuster) ac_).adjustVolume(result);
+        ((VolumeAdjuster) ac_).updateVolume(result);
     }
 
     }

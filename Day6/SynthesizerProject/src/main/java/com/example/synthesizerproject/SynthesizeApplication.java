@@ -5,7 +5,9 @@ import javax.sound.sampled.AudioSystem;
 import javafx.application.Application;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.Clip;
+import javafx.scene.input.MouseEvent;
 import java.io.FileInputStream;
+import javafx.geometry.Bounds;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.event.ActionEvent;
@@ -21,20 +23,47 @@ import javafx.stage.Stage;
 import javafx.scene.layout.AnchorPane;
 import java.io.IOException;
 import java.util.ArrayList;
+import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.stage.Stage;
+import javafx.scene.layout.AnchorPane;
+
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.swing.*;
+import java.io.IOException;
+import java.util.ArrayList;
 
 public class SynthesizeApplication extends Application {
 
     AnchorPane mainCenter;
     public static Circle speaker;
+
+    private static Mixer mixer;
     //Slider frequencySlider = new Slider(200, 400, 310);
     public static ArrayList<AudioComponentWidget> widgets = new ArrayList<>();
     public static ArrayList<AudioComponentWidget> connectedWidgets = new ArrayList<>();
     public static ArrayList<SineWave> sineWaves = new ArrayList();
+    //public static ArrayList<VolumeAdjusterWidget> volWidgets = new ArrayList<>();
 
     public VolumeAdjuster changeVolume;
 
     @Override
     public void start(Stage stage) throws IOException {
+        mixer = new Mixer();
         BorderPane mainLayout = new BorderPane();
 
         //Right Panel
@@ -69,7 +98,7 @@ public class SynthesizeApplication extends Application {
         //Linear Ramp Button
         Button mixerBtn = new Button("Mixer");
         mixerBtn.setStyle("-fx-background-color: #FFECF6; -fx-text-fill: #E0218A; -fx-border-color: white; -fx-border-width: 2px; -fx-font-family: 'Comic Sans MS'; -fx-font-weight: bold; -fx-font-size: 14;");
-        mixerBtn.setOnAction(this::createComponent);
+        mixerBtn.setOnAction(this::createMixer);
         rightpanel.getChildren().add(mixerBtn);
 
         //Center Panel
@@ -102,6 +131,48 @@ public class SynthesizeApplication extends Application {
         stage.show();
     }
 
+    private void playAudio(ActionEvent e) {
+        //ATTEMPT OF NABIL'S CODE
+        try{
+            Clip c = AudioSystem.getClip();
+            AudioFormat format16 = new AudioFormat(44100, 16, 1, true, false);
+            mixer = new Mixer();
+            for (AudioComponentWidget w:connectedWidgets){
+                AudioComponent audioComponent = w.getAudioComponent();
+                mixer.connectInput(audioComponent);
+
+            }
+            AudioClip clip = mixer.getClip();
+            c.open(format16, clip.getData(), 0, clip.getData().length);
+            c.start();
+            AudioListener listener = new AudioListener(c);
+            c.addLineListener(listener);
+        } catch (LineUnavailableException k) {
+            System.out.println(k.getMessage());
+        }
+
+        //pass the widget that you want to play (speaker)
+        //Build anoother speaker class
+//        AudioComponent ac = speaker.getComponent();
+//        try{
+//            AudioFormat format16 = new AudioFormat(44100, 16, 1,true, false);
+//            Clip c = AudioSystem.getClip();
+//            AudioListener listener = new AudioListener( c );
+//            //build the sound
+//            byte[] data = ac.getClip.getData();
+//            //Reads the data from our byte array to play it
+//            c.open(format16, data, 0, data.length);
+//            c.start();
+//            c.loop(1);
+//            c.addLineListener(listener);
+//        }
+//        catch(LineUnavailableException noline){
+//            noline.printStackTrace();
+//        }
+
+
+    }
+
     private void createComponent(ActionEvent e) {
         int frequency = 200;
         AudioComponent sineWave = new SineWave(frequency);
@@ -113,43 +184,34 @@ public class SynthesizeApplication extends Application {
 
     // Creates a volume adjustment widget
     private void createVolume(ActionEvent e) {
-        int initialVolume = 3;
-        AudioComponent volume = new VolumeAdjuster(initialVolume);
-        VolumeAdjusterWidget volumeWidget = new VolumeAdjusterWidget(volume, mainCenter);
-        // Add the VolumeAdjusterWidget to the mainCenter AnchorPane
-        mainCenter.getChildren().add(volumeWidget);
-        // Add the widget to your list of widgets (if needed)
-        widgets.add(volumeWidget);
+        AudioComponent volAdj = new VolumeAdjuster(100);
+        VolumeAdjusterWidget vw = new VolumeAdjusterWidget(volAdj, mainCenter);
+        mainCenter.getChildren().add(vw);
+        widgets.add(vw);
     }
 
-//    private void createMixer(ActionEvent e) {
-//        MixerWidget mixer = new MixerWidget();
-//        // Add the VolumeAdjusterWidget to the mainCenter AnchorPane
-//        mainCenter.getChildren().add(mixer);
-//        // Add the widget to your list of widgets (if needed)
-//        widgets.add(mixer);
-//    }
+    private void createMixer(ActionEvent e) {
+        AudioComponent combineNoise = new Mixer();
+        MixerWidget acw = new MixerWidget(combineNoise, mainCenter);
+        mainCenter.getChildren().add(acw);
+        widgets.add(acw);
+    }
 
-    private void playAudio(ActionEvent e) {
-        //ATTEMPT OF NABIL'S CODE
-        try{
-            Clip c = AudioSystem.getClip();
-            AudioFormat format16 = new AudioFormat(44100, 16, 1, true, false);
-            Mixer mixer = new Mixer();
-            for (AudioComponentWidget w:connectedWidgets){
-                AudioComponent audioComponent = w.getAudioComponent();
-                mixer.connectInput(audioComponent);
+    public static AudioComponentWidget findClosestConnectable(MouseEvent e){
+        for(AudioComponentWidget acw:widgets){
+            Bounds speakerBounds=acw.getCircleBounds();
+            double distance = Math.sqrt(Math.pow(speakerBounds.getCenterX() - e.getSceneX(), 2.0)+Math.pow(speakerBounds.getCenterY()-e.getSceneY(), 2.0));
+            if (distance <15){
+                return acw;
             }
-            AudioClip clip = mixer.getClip();
-            c.open(format16, clip.getData(), 0, clip.getData().length);
-            c.start();
-            AudioListener listener = new AudioListener(c);
-            c.addLineListener(listener);
-        } catch (LineUnavailableException k) {
-            System.out.println(k.getMessage());
         }
+        return null;
     }
 
+
+    public static void connectToSpeaker(AudioComponent ac){
+        mixer.connectInput(ac);
+    }
     public static void main (String[]args){
         launch();
     }
