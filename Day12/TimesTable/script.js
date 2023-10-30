@@ -13,7 +13,7 @@ function createMultiplicationTable(){
       cell.addEventListener("mouseout", () => cell.classList.remove("highlighted"));
       cell.addEventListener("click", () => {
        clearSelection();
-       cell.classList.add("Selected");
+       cell.classList.add("selected");
      });
    row.appendChild(cell);
   }
