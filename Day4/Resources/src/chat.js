@@ -1,110 +1,184 @@
 "use strict";
 
-//Set parts of the document into variables
-//TOP HALF
-const usernameInput = document.getElementById('myname');
-const roomInput = document.getElementById('room');
-const joinButton = document.getElementById('joinButton');
-//BOTTOM HALF
-const messageInput = document.getElementById('messagehere');
-const sendMessageButton = document.getElementById('button');
-//Leave button
-let leaveButton = document.getElementById('leave');
-leaveButton.onclick = handleClose;
 
-//Server
-const serverURL = "ws://localhost:8080/";
-let ws = new WebSocket(serverURL);
-let wsOpen = false;
+//Get the user and message area and store them in their respective variables
+//user box
+let peopleArea=document.getElementById("people");
+//message box
+let messageArea=document.getElementById("messageArea");
 
-//Webserver actions
-ws.onopen = handleOpen;
-ws.onmessage = handleMsg;
-ws.onclose = handleClose;
+//Get buttons by their ID and store it in their respective variables
+let joinButton=document.getElementById("joinButton");
+let sendMessageButton=document.getElementById("button");
+let leaveButton=document.getElementById("leave");
 
+//Get areas for text inputs and store them in their respective variables
+let usernameText=document.getElementById("myname");
+let roomNameText=document.getElementById("room");
+let messageText=document.getElementById("messagehere");
 
-// Function to join a room
-function joinRoom(username, roomName) {
-  if (wsOpen) {
-  const joinMessage = `join ${username} ${roomName}`;
-  ws.send(joinMessage);
-  console.log(joinMessage)
-  console.log("Attempted to join!");
-  }
-}
- // Event listener for the "Join" button
- joinButton.addEventListener('click', function () {
-    const username = usernameInput.value;
-    const roomName = roomInput.value;
-    //Filter for invalid roomName inputs
-    if (username && roomName) {
-       if (roomName >= 'a' && roomName <= 'z') {
-       joinRoom(username, roomName);
-       console.log("Joined!")
-       }
-       else {
-       alert("Your room-name must contain only lowercase letters.");
-      }
-     }
-  });
+//Allow clicks and and key presses for the join button, username input, and roomname input
+joinButton.addEventListener("click", handleEnterChat);
+usernameText.addEventListener("keypress", handleEnterChat);
+roomNameText.addEventListener("keypress", handleEnterChat);
+sendMessageButton.addEventListener("click", handleSendMessage);
+messageText.addEventListener("keypress", handleSendMessage);
+
+//handle keyboard/mouse click events for leaving the chatroom
+leaveButton.addEventListener("click", leaveChat);
 
 
-//  function sendMessage(message) {
-//    if (wsOpen) {
-//      ws.send(message);
-//      console.log(message);
-//    }
-//  }
-  // Event listener for the "Send" button
-  sendMessageButton.addEventListener('click', function () {
-  //Create message variable,
-        let message = {"type":"message", "user":usernameInput.value, "room":roomInput.value, "message": messageInput.value}
-        ws.send(JSON.stringify(message);
-  });
+//Global variables
+//Default wsOpen to "false" to indicate websocket is not open
+let wsOpen=false;
+//Default to false to indicate user is not in chatroom
+let inChatRoom = false;
+//Create websocket and store url
+let ws = new WebSocket('ws://localhost:8080');
 
-//Parse message and check type
-  function handleMsg(event) {
-    let message = event.data;
-    let msg = JSON.parse(message)
-    if(msg.type.equals("message")){
-        displayMessage(msg.message);
-    }
-    else if (msg.type.equals("join")){
-          const messageToDisplay = `${msg.user} has joined room ${msg.room}!`;
-          displayPeopleMessage(messageToDisplay);
-    }
-    console.log("I'm here!");
-  }
-//For displaying the users who appear in the room in the correct box
-    function displayPeopleMessage(users) {
-      const messageDiv = document.createElement('p');
-      messageDiv.textContent = users;
-      people.appendChild(messageDiv);
-      // Automatically scroll to the latest message
-      people.scrollTop = people.scrollHeight;
-    }
-//For displaying the messages sent in the correct box
-  function displayMessage(message) {
-    const messageDiv = document.createElement('div');
-    messageDiv.textContent = message;
-    messageArea.appendChild(messageDiv);
-    // Automatically scroll to the latest message
-    messageArea.scrollTop = messageArea.scrollHeight;
-  }
+//Handling the websocket by assigning actions to respective methods
+ws.onopen=handleOpen;
+ws.onmessage = function(e) {
+    handleMsg(e);
+};
+ws.onclose=handleClose;
+ws.onerror=handleError;
 
-//Switch wsOpen to true
-function handleOpen(event){
-    wsOpen = true;
-    console.log(event);
+
+//When websocket opens, switch "wsOpen" to true
+function handleOpen(){
+    wsOpen=true;
 }
 
-//Send a message when you leave the room
-function handleClose(event){
-    let you = document.createTextNode("You left the room.");
+//When websocket receives message, parse the message
+//Store pieces of websocket message in their respective variables
+function handleMsg(e){
+    let msgObj = JSON.parse(e.data);
+    let type=msgObj.type;
+    let room = msgObj.room;
+    let user = msgObj.user;
+    let message=msgObj.message;
+
+    //Create a break element
     let lineBreak = document.createElement("br");
-    messageArea.appendChild(lineBreak);
-    messageArea.appendChild(you);
-    ws.send("leave");
+
+    //If the type is message
+    if(type==="message"){
+        //Call displayTimeStamp
+        const timestamp=displayTimeStamp();
+        //Format of time stamp in message area
+        let timeTextStamp = document.createElement('span');
+        timeTextStamp.textContent = `[${timestamp}] `;
+        timeTextStamp.classList.add('timestamp');
+
+        let sentText=document.createTextNode(user + ": " + message)
+
+
+        messageArea.appendChild(lineBreak);
+        messageArea.appendChild(timeTextStamp);
+        messageArea.appendChild(sentText);
+  }
+
+    if (type === "join"){
+        let chatParticipants = document.createElement("div");
+        chatParticipants.textContent = user;
+        chatParticipants.id = user;
+
+        peopleArea.appendChild(chatParticipants);
+    }
+
+    if (type === "leave"){
+        let outText = document.createTextNode(user + " left " + room + ".");
+
+        // Remove the element with the specified id
+        let chatParticipant = document.getElementById("people");
+               let leaveUser = document.getElementById(user)
+               chatParticipant.removeChild(leaveUser)
+
+        messageArea.appendChild(lineBreak);
+        messageArea.appendChild(outText);
+    }
+}
+function handleClose(){
+    wsOpen=false;
+    alert("Websocket Connection Closed");
 }
 
 
+function handleError(errorMessage){
+
+    console.error("Server error: " + errorMessage);
+
+}
+
+function handleEnterChat (event){
+
+    if (event.key === "Enter" || event.type === "click"){
+
+        console.log("name is: " + getName());
+        console.log("room is: " + getRoom());
+
+        if(getName()!=="" && getRoom()!=="" && !inChatRoom){
+            ws.send("join:" + getName() + ":" + getRoom());
+            inChatRoom = true;
+        }
+
+        else if (inChatRoom) {
+            alert("You are already in a chat room. Leave the room before joining a new one.");
+            return;
+        }
+
+        else{
+            alert("Incorrect entry, please try again.");
+            return;
+        }
+    }
+}
+
+function getName(){
+    return usernameText.value.toLowerCase();
+}
+
+function getRoom(){
+    return roomNameText.value.toLowerCase();
+}
+
+function handleSendMessage(event){
+
+    if (event.key === "Enter" || event.type === "click"){
+        let message=messageText.value;
+
+        console.log("message is: "+ message);
+
+        if(message!==""){
+            ws.send("message:" + getName() + ":" + getRoom() + ":" + message);
+            messageText.value = "";
+        }
+        else{
+            alert("Entry is null, please try again");
+            return;
+        }
+    }
+}
+
+function leaveChat(event){
+
+    console.log("leave button pressed");
+    if (event.type==="click"){
+
+        document.getElementById("people").innerHTML = "";
+        document.getElementById("messageArea").innerHTML = "";
+
+        inChatRoom=false;
+
+        ws.send("leave:" + getName() + ":" + getRoom());
+    }
+}
+
+function displayTimeStamp() {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+}

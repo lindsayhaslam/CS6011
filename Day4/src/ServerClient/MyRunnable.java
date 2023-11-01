@@ -1,152 +1,194 @@
 package ServerClient;
 import java.io.*;
 import java.net.Socket;
-import java.util.Scanner;
 import java.nio.charset.StandardCharsets;
 
-//Defines MyRunnable class, implement Runnable interface.
-//This class is meant to be used as a separate thread to handle client requests.
 public class MyRunnable implements Runnable {
-    //Represents the client's connection to the server
-    Socket client;
-//    const serverURL = "ws://localhost:8080/";
-//    let ws = new WebSocket(serverURL);
 
-    //Constructor
-    public MyRunnable(Socket client) {
-        this.client = client;
+    Socket client_;
+    private String username_;
+    public String roomName_;
+    public String message_;
+    RoomManager rm_;
+
+    public MyRunnable(Socket client, RoomManager rm) {
+        client_ = client;
+        username_=null;
+        roomName_=null;
+        message_=null;
+        rm_=rm;
     }
 
-    private void handleWebSocketMessages() throws IOException {
-        //Store WebSocket frame control information.
-        //Will be used to determine the characteristics of the incoming WebSocket message.
+    private String decodeMessage() throws IOException {
+
         Boolean fin_;
+        int opcode_;
         Boolean mask_;
-        //For storing the length of the payload.
-        long payloadLength_;
-        //An empty byte array to store the mask that may be applied to payload data.
-        byte[] maskArray = new byte[0];
-        //Reads data from client's input stream.
-        //Used to receive data from the client.
-        DataInputStream dataStream = new DataInputStream(client.getInputStream());
+        long payloadLen_;
+        byte[] maskBytes = new byte[0];
+        String message;
 
-        //Reads through WebSocket frames from the client until an exit condition is met.
-        //Loop keeps reading frames as they arrive.
-        while (true){
-            //Reads the first two bytes of the WebSocket frame.
-            //The first two bytes contain control information.
-            System.out.println("************Start of the while loop*******");
-            System.out.println("Available bytes in dataStream: " + dataStream.available());
-            byte[] input = dataStream.readNBytes(2);
-            System.out.println(input);
-            //Extracting the fin and mask bits from the first byte of the frame.
-            System.out.println("Input before anding: "+ input[0]);
-            fin_ = (input[0] & 0x80) > 0;
-            System.out.println("Input after anding: " + input[1]);
-            mask_ = (input[1] & 0x80) > 0;
-            //Extracts the payload length, which is in the second byte of the frame.
-            payloadLength_ = (input[1] & 0x7f);
+        DataInputStream in = new DataInputStream(client_.getInputStream());
 
-            //Check if length is 126 or 127.
-            if(payloadLength_ < 126){
-                System.out.println("Payload is not extended, length: " + payloadLength_);
-            }
-            else if (payloadLength_==126){
-                payloadLength_= dataStream.readShort();
-                System.out.println("Payload is extended: 2 bits, length: " + payloadLength_);
-            }
-            else if (payloadLength_==127){
-                payloadLength_= dataStream.readLong();
-                System.out.println("Payload is extended: 8 bits, length: " + payloadLength_);
-            }
-            System.out.println("Masked: "+ mask_+"Length: "+payloadLength_);
+        System.out.println("handling incoming message for: " + client_);
 
-            //If payload length is masked, the code reads 4 bytes from the unput stream
-            //into the "maskArray". The mask is used to decode the payload data.
-            if(mask_){
-                maskArray=dataStream.readNBytes(4);
-            }
-            //Reads the payload data into the array of the designated length.
-            byte[] encodedPayloadArray = dataStream.readNBytes((int) payloadLength_);
-            byte[] decodedPayloadArray = new byte[(int)payloadLength_];
-            //If payload is masked, the code is decoded by applying XOR operation.
-            //XOR operation ensures that payload is in its original form.
-            if (mask_){
-                for (int i = 0; i < encodedPayloadArray.length; i++){
-                    decodedPayloadArray[i] = (byte)(encodedPayloadArray[i] ^ maskArray[i%4]);
-                }
-            }
-            //Convert the payload data into a String and the message is printed out.
-            String message = new String(decodedPayloadArray, StandardCharsets.UTF_8);
-            System.out.println("message" + message);
-            sendMessage(message);
-            //return message;
+        byte[] input = in.readNBytes(2);
+
+        fin_ = (input[0] & 0x80) > 0;
+
+        opcode_ = (input[0] & 0x0F);
+
+        mask_ = (input[1] & 0x80) > 0;
+
+        payloadLen_ = (input[1] & 0x7f);
+
+        if (payloadLen_ == 126) {
+            payloadLen_ = in.readShort();
+        } else if (payloadLen_ == 127) {
+            payloadLen_ = in.readLong();
         }
+
+        System.out.println("Masked: " + mask_ + " Length: " + payloadLen_);
+
+        if (mask_) {
+            maskBytes = in.readNBytes(4);
+        }
+
+        byte[] payloadArr = in.readNBytes((int) payloadLen_);
+
+        if (mask_) {
+            for (int i = 0; i < payloadArr.length; i++) {
+                payloadArr[i] = (byte) (payloadArr[i] ^ maskBytes[i % 4]);
+            }
+            message = new String(payloadArr, StandardCharsets.UTF_8);
+            System.out.println("MESSAGE: " + message + "---------------------------------------------");
+        } else {
+            message = new String(payloadArr, StandardCharsets.UTF_8);
+        }
+        return message;
     }
-    //Overriding a method from the "Runnable" interface.
-    //Run is a required method.
-    @Override
-    public void run() throws RuntimeException {
-        HTTPResponse response = new HTTPResponse();
-        HTTPRequest request = null;
-        try{
-            //An attempt to create a new request
-            request = new HTTPRequest(client);
-        } catch (IOException e){
-            throw new RuntimeException(e);
-        }
 
-        boolean parsed = request.parseRequest();
+    public void encodeMessage(String message) {
         try {
-            //Checks if the request object was successfully created.
-            //If not, send a websocket response.
-//            if (!request.parseRequest()){
-//                System.out.println("Server received a bad http... ignoring...");
-//                return;
-////                response.sendWebSocketResponse(client, request.getWebSocketKey());
-////                    continue;
-//            }
-            //If the request is a WebSocket request, send a response and
-            //call handleWebSocketMessages method.
-            if (request.isWebSocket()){
-                response.sendWebSocketResponse(client, request.getWebSocketKey());
-                //while(true){
-                    handleWebSocketMessages();
-                    System.out.println("Request is being sent");
-
-                //}
-            //Send create File response
-            } else {
-                //Creates the file needed to send through sendResponse
-                File file = response.createFile(request.getParameter());
-                //Send response to client
-                response.sendResponse(client, file, request.getFileType());
-                System.out.println("Response is being sent");
-            }
-        //If an exception occurs, catch it and send the error response (404).
-        } catch (IOException e) {
-            try{
-                response.sendErrorResponse(client);
-            } catch (IOException ex){
-                throw new RuntimeException(e);
-            }
-        }
-        }
-    public void sendMessage(String message){
-        try{
-            DataOutputStream dataOut = new DataOutputStream(client.getOutputStream());
+            DataOutputStream dataOut = new DataOutputStream(client_.getOutputStream());
             byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
 
+            // Construct a WebSocket text frame
             byte[] frame = new byte[messageBytes.length + 2];
-            frame[0] = (byte) 0x01;
-            frame[1] = (byte) messageBytes.length;
+            frame[0] = (byte) 0x81;  // Text frame opcode
+            frame[1] = (byte) messageBytes.length;  // Length of the message
 
             System.arraycopy(messageBytes, 0, frame, 2, messageBytes.length);
+
             dataOut.write(frame);
             dataOut.flush();
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
+
+    private void parseMessType(String message) {
+        String cmd_;
+        String[] messArr = message.split(":");
+        cmd_ = messArr[0];
+        username_=messArr[1];
+        roomName_=messArr[2];
+        if(cmd_.equals("join")){
+            rm_.joinRoom(this);
+        }
+        if (cmd_.equals("leave")){
+            rm_.leaveRoom(this);
+        }
+        if (cmd_.equals("message")){
+            message_=messArr[3];
+            rm_.sendMess(message_, this);
+        }
+    }
+
+    public String getUsername_(){
+        return username_;
+    }
+    public String getRoomName_(){
+        return roomName_;
+    }
+    public String getMessage_(){
+        return message_;
+    }
+
+    public static String makeJoinMsg(String room, String name){
+        return "{ \"type\": \"join\", \"room\": \"" + room + "\", \"user\": \"" + name + "\" }";
+    }
+    public static String makeMsgMsg(String room, String name, String message) {
+        return "{ \"type\": \"message\", \"user\": \"" + name + "\", \"room\": \"" + room + "\", \"message\": \"" + message + "\" }";
+    }
+    public static String makeLeaveMsg(String room, String name) {
+        return "{ \"type\": \"leave\", \"room\": \"" + room + "\", \"user\": \"" + name + "\" }";
+    }
+
+    @Override
+    public void run() {
+        //Create a response object
+        HTTPResponse response = new HTTPResponse();
+        //Create a request object which requires a ServerSocket to initialize
+        HTTPRequest request = null;
+        try {
+            request = new HTTPRequest(client_);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            //calls the parse method with the request object
+            if (!request.parse()) {
+                System.out.println("bad req");
+            }
+
+            if (request.isWebSocket()) {
+                response.sendWebSockHandshake(client_, request.getWebSocketKey());
+                String endMessage = new String(new byte[]{3,-23});
+                boolean done = false;
+                while (!done) {
+
+                    //this decodes the packet after the handshake was completed
+                    String msg = decodeMessage();
+
+                    if( msg.equals(endMessage)){
+                        System.out.println("closing socket");
+                        done = true;
+
+                        //This leave room does the wrong name?
+                        rm_.leaveRoom(this);
+
+                        client_.close();
+                    }
+                    else{
+                        parseMessType(msg);
+                    }
+
+                }
+            }
+            else {
+
+                //creates the file that is required to send into the response.sendResponse
+                File file = response.createFile(request.getParameter());
+
+                //sends the response back to the client
+                response.sendHTTPResponse(client_, file, request.getFileType());
+                client_.close();
+
+            }
+        } catch (Exception e) {
+            //if there are any errors above, the error page is sent to site to prevent crashing
+            try {
+                response.sendFailResponse(client_);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    }
+
 }
+
+
+
+
+
